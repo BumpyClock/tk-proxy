@@ -25,6 +25,21 @@
   - `bun build ./src/cli.ts --compile --outfile ./bin/tk-proxy`
 - On Windows this produces `bin/tk-proxy.exe`.
 
+## Server/client topology
+
+- Server mode accepts machine payload uploads over HTTP and stores only the latest payload per client.
+- Daily combined submit should run in UTC and gate on a persisted `lastSubmittedDate` so restart does not cause duplicate submits.
+- A practical client cadence is base `4h` plus jitter `1h` so clients spread over the 4-5h target window.
+- Keep auth simple with a shared bearer token over Tailscale/private network.
+- For operator ergonomics, server can auto-generate and print a bearer token if none is provided.
+- Add `--no-auth` for trusted-network setups or local debugging.
+
+## Persistence contract
+
+- `clients/<clientId>.json`: latest uploaded payload and metadata (`capturedAt`, `receivedAt`, `sourceHost`).
+- `state.json`: `lastSubmittedDate`, `lastSubmittedAt`, `lastSubmitError`, `lastSubmissionId`.
+- `submissions/<yyyy-mm-dd>.json`: combined payload plus submit response for auditability and replay/debug.
+
 ## Dependency check (TypeScript toolchain)
 
 - `typescript@5.9.3` (registry metadata: modified 2026-02-18).

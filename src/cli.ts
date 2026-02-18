@@ -5,6 +5,10 @@ import os from "node:os";
 import path from "node:path";
 import { spawn } from "node:child_process";
 import { combinePayloads, extractPayloadFromJson, type TokenContributionData } from "./merge.js";
+import { runClient } from "./client.js";
+import { parseClientModeArgs, parseServerModeArgs } from "./mode-args.js";
+import { runServer } from "./server.js";
+import { submitToTokscale } from "./tokscale.js";
 
 interface CommandResult {
   exitCode: number;
@@ -46,11 +50,17 @@ Usage:
   tk-proxy --capture [--output <file>] -- <command ...>
   tk-proxy --combine -i <file1> <file2> [more files...] -o <output.json>
   tk-proxy --submit -i <input.json> [--dry-run]
+  tk-proxy --server [options]
+  tk-proxy --client <server-url> [options]
 
 Examples:
   tk-proxy --capture -- tokscale submit --dry-run
   tk-proxy --combine -i host-a.json host-b.json -o combined.json
   tk-proxy --submit -i combined.json
+  tk-proxy --server --port 8787 --auth-token <token>
+  tk-proxy --client http://100.64.0.1:8787 --auth-token <token>
+  tk-proxy --server --no-auth
+  tk-proxy --client http://100.64.0.1:8787 --no-auth
 `;
 
 function fatal(message: string, code = 1): never {
@@ -350,16 +360,6 @@ async function handleCombine(argv: string[]): Promise<void> {
   );
 }
 
-async function readCredentials(): Promise<{ token: string; username: string }> {
-  const credentialsPath = path.join(os.homedir(), ".config", "tokscale", "credentials.json");
-  const content = await fs.readFile(credentialsPath, "utf8");
-  const credentials = safeParseJson<{ token?: string; username?: string }>(content);
-  if (!credentials?.token || !credentials?.username) {
-    throw new Error(`Invalid credentials file: ${credentialsPath}`);
-  }
-  return { token: credentials.token, username: credentials.username };
-}
-
 async function handleSubmit(argv: string[]): Promise<void> {
   const { inputFile, dryRun } = parseSubmitArgs(argv);
   const { absolute, parsed } = await readJson(inputFile);
@@ -373,22 +373,7 @@ async function handleSubmit(argv: string[]): Promise<void> {
     return;
   }
 
-  const credentials = await readCredentials();
-  const baseUrl = process.env.TOKSCALE_API_URL || "https://tokscale.ai";
-  const response = await fetch(`${baseUrl}/api/submit`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${credentials.token}`
-    },
-    body: JSON.stringify(payload)
-  });
-
-  const text = await response.text();
-  const result = safeParseJson<{ submissionId?: string; metrics?: { totalTokens?: number; totalCost?: number } }>(text) ?? { raw: text };
-  if (!response.ok) {
-    throw new Error(`Submission failed (${response.status}): ${JSON.stringify(result)}`);
-  }
+  const { response: result } = await submitToTokscale(payload);
 
   console.log("Submit success.");
   if ("submissionId" in result && result.submissionId) {
@@ -419,6 +404,26 @@ async function main(): Promise<void> {
   }
   if (mode === "--submit") {
     await handleSubmit(argv);
+    return;
+  }
+  if (mode === "--server") {
+    const options = parseServerModeArgs(argv);
+    if (options.authTokenGenerated && options.authToken) {
+      console.log(`[server] generated auth token: ${options.authToken}`);
+      console.log(`[server] client env hint: TK_PROXY_AUTH_TOKEN=${options.authToken}`);
+    }
+    if (options.noAuth) {
+      console.log("[server] auth disabled via --no-auth");
+    }
+    await runServer(options);
+    return;
+  }
+  if (mode === "--client") {
+    const options = parseClientModeArgs(argv);
+    if (options.noAuth) {
+      console.log("[client] auth disabled via --no-auth");
+    }
+    await runClient(options);
     return;
   }
   fatal(`Unknown mode: ${mode}\n\n${HELP_TEXT}`, 2);
