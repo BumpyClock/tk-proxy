@@ -1,0 +1,16 @@
+{
+  "name": "tk-proxy",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "tk-proxy": "./src/cli.mjs"
+  },
+  "scripts": {
+    "test": "node --test",
+    "start": "node ./src/cli.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
