@@ -6,10 +6,14 @@ Simple proxy wrapper around `tokscale` to:
 2. Combine multiple machine payloads into one merged report.
 3. Submit the merged report to Tokscale.
 
+
+I use agents across multiple machines and want to see my combined usage. 
+
 ## Install locally
 
 ```bash
-npm link
+bun install
+bun link
 ```
 
 Then run `tk-proxy`.
@@ -66,5 +70,18 @@ tk-proxy --submit -i combined.json --dry-run
 ## Test
 
 ```bash
-npm test
+bun run test
 ```
+
+## Build Executable
+
+Create a self-contained executable for the current platform:
+
+```bash
+bun run build
+```
+
+Output path:
+
+- Windows: `bin/tk-proxy.exe`
+- macOS/Linux: `bin/tk-proxy`

@@ -1,2 +1,8 @@
 node_modules/
 *.log
+dist/
+bin/
+package-lock.json
+tk-capture-*.json
+tk-combined-*.json
+quick-capture.json

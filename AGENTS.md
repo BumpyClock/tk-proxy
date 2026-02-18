@@ -5,3 +5,5 @@ I want to run it like `tk-proxy --capture -- tokscale submit`  and it should cap
 then tk-proxy --combine -i <file 1> <file 2> <etc> -o output.json to combine the output of multiple tokscale submits into a single report.
 
 then tk-proxy --submit -i output.json to submit the combined report to tokscale. our submission can use tokscale binary or we can read the source code of tokscale and submit the report using the same logic and API endpoint.
+
+use bun as the package manager for this project.
