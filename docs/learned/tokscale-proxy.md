@@ -33,6 +33,7 @@
 - Keep auth simple with a shared bearer token over Tailscale/private network.
 - For operator ergonomics, server can auto-generate and print a bearer token if none is provided.
 - Add `--no-auth` for trusted-network setups or local debugging.
+- Auto-generated token is process-local convenience; for predictable restarts, set a stable token via `--auth-token` or `TK_PROXY_AUTH_TOKEN`.
 
 ## Persistence contract
 

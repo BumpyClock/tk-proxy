@@ -86,6 +86,17 @@ The server stores latest payload per client and submits a combined payload once 
 
 If auth is enabled and no token is provided, server auto-generates one at startup and prints it for client use.
 
+Quick start with auto-generated token:
+
+```powershell
+.\bin\tk-proxy.exe --server
+# copy token from startup output and set for client shell:
+$env:TK_PROXY_AUTH_TOKEN = "<printed-token>"
+.\bin\tk-proxy.exe --client http://<server-ip>:8787
+```
+
+For stable long-running deployments, set a fixed token instead of relying on auto-generation each restart.
+
 ### Server options
 
 - `--host` (default `0.0.0.0`)
@@ -109,8 +120,8 @@ If auth is enabled and no token is provided, server auto-generates one at startu
 
 ### HTTP endpoints
 
-- `POST /v1/captures` (auth required): receive client payloads
-- `GET /status` (auth required): server state + client list
+- `POST /v1/captures` (auth unless `--no-auth`): receive client payloads
+- `GET /status` (auth unless `--no-auth`): server state + client list
 - `GET /healthz` (no auth): liveness check
 
 ### Server storage layout
