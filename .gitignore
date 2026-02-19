@@ -7,3 +7,4 @@ tk-capture-*.json
 tk-combined-*.json
 quick-capture.json
 .tk-proxy/
+combined.json
