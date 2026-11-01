@@ -1,0 +1,9 @@
+#!/bin/sh
+set -eu
+root=$(git rev-parse --show-toplevel)
+cd "$root"
+if ! command -v bun >/dev/null 2>&1; then
+  echo 'pre-push: prepare the Bun version in package.json and run bun install --frozen-lockfile' >&2
+  exit 1
+fi
+exec bun run scripts/pre-push.ts

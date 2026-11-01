@@ -1,0 +1,2 @@
+# Keep the Git hook entrypoint portable with autocrlf enabled.
+.githooks/pre-push text eol=lf
