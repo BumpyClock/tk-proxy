@@ -11,7 +11,7 @@ Simple proxy wrapper around `tokscale` to:
 ## Install locally
 
 ```bash
-bun install
+bun install --frozen-lockfile
 bun link
 ```
 
@@ -129,6 +129,33 @@ For stable long-running deployments, set a fixed token instead of relying on aut
 - `./.tk-proxy/clients/<clientId>.json` (latest payload per client)
 - `./.tk-proxy/state.json` (last submit status)
 - `./.tk-proxy/submissions/<yyyy-mm-dd>.json` (daily combined payload + submit response)
+
+## Optional local pre-push checks
+
+Prepare Bun 1.3.3 (`package.json#packageManager`), a Node version satisfying
+`engines.node`, and `bun install --frozen-lockfile`. Opt in with
+`bun run hooks:install`. No installation occurs automatically. The installer
+refuses unrelated `core.hooksPath` settings and active default hooks. Repeating
+installation is safe. Repository-local `.githooks` applies to linked worktrees,
+which must contain these tracked files.
+
+The hook runs full-project `bun run typecheck`, then `bun run test`. Tests still
+compile TypeScript before running Node on emitted `dist/test/*.test.js`; only
+ignored build outputs are written. No capture, submit, scheduling, server,
+credentials, downloads, or dependency installation occurs. No formatter or linter
+policy exists here; this gate does not claim format/lint coverage.
+
+Each non-deleted pushed ref, including peeled tags, must point to checked-out HEAD.
+Tracked and untracked changes block validation. Use a separate clean checkout
+for each different pushed commit. Full scopes handle new branches, unavailable
+remote bases, renames, deletions and shared configs without filename skips.
+Deletion-only pushes skip project checks; empty stdin runs full checks. Tool
+failure exit codes propagate without stashing or switching the checkout.
+
+`bun run test:hooks` runs actual hook/installer fixtures with stub commands and no
+outbound push. It is separate from the real Node runtime suite. Windows hook
+execution still requires matching Git/Bun/Node host validation; a Linux harness
+is not native Windows acceptance. No CI is activated.
 
 ## Test
 
